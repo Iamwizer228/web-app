@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sotrudniki</title>
+    <link href="css/index.css" rel="stylesheet">
+    <script src="js/index.js" defer></script>
+</head>
+<body>
+    <header>
+        <h1>Анкета для устройства на стройку</h1>
+        <p>Свяжитесь с нами через <a href="https://t.me/a_temp_file" target="_blank">Telegram</a> или на <a href="https://www.avito.ru" target="_blank">Avito</a>.</p>
+    </header>
+    <main>
+        <section class="form-container">
+            <form id="application-form">
+                <div class="form-group">
+                    <label for="name">ФИО:</label>
+                    <input type="text" id="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Возраст:</label>
+                    <input type="number" id="age" required min="18">
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Телефон:</label>
+                    <input type="tel" id="phone" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="experience">Опыт работы (лет):</label>
+                    <input type="number" id="experience" required min="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="criminal">Есть ли у вас судимость?</label>
+                    <select id="criminal" required>
+                        <option value="">Выберите...</option>
+                        <option value="yes">Да</option>
+                        <option value="no">Нет</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="position">На какую должность вы претендуете?</label>
+                    <input type="text" id="position" required>
+                </div>
+
+                <button type="submit">Отправить анкету</button>
+            </form>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 Стройка. Все права защищены.</p>
+    </footer>
+
+    
+    <script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="./js/telegram.js"></script>
+</body>
+</html>
