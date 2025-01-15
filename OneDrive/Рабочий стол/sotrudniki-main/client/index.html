@@ -9,8 +9,6 @@
 </head>
 <body>
     <header>
-        <h1>Анкета для устройства на стройку</h1>
-        <p>Свяжитесь с нами через <a href="https://t.me/a_temp_file" target="_blank">Telegram</a> или на <a href="https://www.avito.ru" target="_blank">Avito</a>.</p>
     </header>
     
     <main>
@@ -27,16 +25,16 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="criminal">Есть ли у вас судимость?</label>
+                    <label for="criminal">Судимость?</label>
                     <select id="criminal" name="criminal" required>
                         <option value="">Выберите...</option>
-                        <option value="yes">Да</option>
-                        <option value="no">Нет</option>
+                        <option value="yes">Отсутствует</option>
+                        <option value="no">Неважно</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label for="position">На какую должность вы претендуете?</label>
+                    <label for="position"> Должность?</label>
                     <input type="text" id="position" name="position" required>
                 </div>
 
@@ -67,6 +65,11 @@
                     <input type="text" id="custom-citizenship" name="custom-citizenship" placeholder="Введите ваше гражданство" style="display:none;">
                 </div>
 
+                <div class="form-group">
+                    <label for="prompt">Промт:</label>
+                    <input type="text" id="prompt" name="prompt">
+                </div>
+
                 <button type="submit">Отправить анкету</button>
             </form>
         </section>
@@ -76,8 +79,5 @@
         <p>&copy; 2025 Стройка. Все права защищены.</p>
     </footer>
 
-    <!-- Скрипт для управления видимостью полей ввода -->
-    <script src="./js/telegram.js"></script>
-    <script src="./js/custom-inputs.js"></script> <!-- Предполагаемый файл для управления пользовательскими вводами -->
 </body>
 </html>
