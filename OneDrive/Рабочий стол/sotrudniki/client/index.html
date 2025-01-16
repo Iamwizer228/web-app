@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Анкета для устройства на стройку</title>
     <link href="css/index.css" rel="stylesheet">
-    <script src="js/index.js" defer></script>
+    <script type="module" src="js/index.js" defer></script>
 </head>
 <body>
     <header>
@@ -14,6 +14,7 @@
     <main>
         <section class="form-container">
             <form id="application-form" action="#" method="POST">
+                <form id="application-form" action="http://localhost:5000/submit" method="POST"></form>
                 <div class="form-group">
                     <label for="age">Возраст:</label>
                     <input type="number" id="age" name="age" required>

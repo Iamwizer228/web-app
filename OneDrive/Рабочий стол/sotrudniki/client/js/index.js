@@ -1,3 +1,4 @@
+
 document.addEventListener('DOMContentLoaded', () => {
     const citySelect = document.getElementById('city');
     const customCityInput = document.getElementById('custom-city');
@@ -24,3 +25,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+import express from 'express'
+import bodyParser from 'body-parser'
+
+const app = express()
+const PORT = 3000
+
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
+app.use(express.static('public'))
+
+app.post('/search', (req, res) => {
+    const searchData = req.body
+    res.json(searchData)
+})
+
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`)
+})
