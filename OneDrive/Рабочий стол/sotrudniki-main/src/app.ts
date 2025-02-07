@@ -1,34 +1,85 @@
-// import express from 'express'
+import express, { Request, Response } from "express";
+import path from "path";
+import mongoose from "mongoose";
+import fs from "fs";
+import { Parser } from "./libs/pptr";
+import { parseAvitoPage } from "./parsers/avito";
+import { config } from "dotenv";
+import xlsx from "xlsx";
+import Employee from "./models/Employee";
 
-import { Parser } from "./libs/pptr"
-import { parseAvitoPage } from "./parsers/avito"
+config();
 
-// const app = express()
+const app = express();
 
-// app.use(express.static('client'))
+const { PORT, MONGO_URL } = process.env;
 
-// app.listen(5000, () => {
-    
-// })
+if (!PORT || !MONGO_URL) throw new Error('PORT or MONGO_URL is not defined')
 
-async function main() {
-    const parser = new Parser()
+mongoose.connect(MONGO_URL);
 
-    await parser.launch()
+app.use(express.static(path.join(__dirname, "../client")));
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
-    const page = await parser.newPage()
+app.get("/export", async (req, res) => {
+  const employees = await Employee.find();
 
-    // TODO: добавить цикл, который пробегается по страницам
+  const formattedData = [
+    ["Title", "Description", "Salary", "Link"],
+    ...employees.map((employee) => [
+      employee.title,
+      employee.desc,
+      employee.salary,
+      employee.href,
+    ]),
+  ];
 
-    const link = 'https://www.avito.ru/volgograd/rezume?cd=1&p=1&q=%D0%B7%D0%B0%D0%BB%D0%B8%D0%B2%D0%BA%D0%B0+%D0%B1%D0%B5%D1%82%D0%BE%D0%BD%D0%B0'
+  const employeeWorkSheet = xlsx.utils.aoa_to_sheet(formattedData);
+  const employeeWorkBook = xlsx.utils.book_new();
 
-    await page.goto(link, { timeout: 50_000 })
+  xlsx.utils.book_append_sheet(employeeWorkBook, employeeWorkSheet, "Employees");
 
-    const avitoData = await parseAvitoPage(page)
+  const filePath = path.join(__dirname, "../data/Employees.xlsx");
+  
+  xlsx.writeFile(employeeWorkBook, filePath);
 
-    console.log(avitoData)
+  res.download(filePath, "Employees.xlsx");
+});
 
-    await parser.close()
-}
+app.get("/", (req: Request, res: Response) => {
+  const indexPath = path.join(__dirname, "../client", "index.html");
+  fs.readFile(
+    indexPath,
+    "utf8",
+    (err: NodeJS.ErrnoException | null, data: string) => {
+      if (err) {
+        res.status(500).send("Ошибка загрузки index.html");
+        return;
+      }
+      res.send(data);
+    }
+  );
+});
 
-main()
+app.post("/submit", async (req: Request, res: Response) => {
+  const { position, city, prompt } = req.body
+
+  const parser = new Parser();
+  await parser.launch();
+  
+  const page = await parser.newPage();
+
+  const employees = parseAvitoPage(page, position, city)
+
+  await parser.close();
+
+  await Employee.create(employees)
+  
+  res.json({
+    message: "успешно",
+    data: employees,
+  });
+});
+
+app.listen(PORT, () => console.log(`Сервер запущен на http://localhost:${PORT}`));
