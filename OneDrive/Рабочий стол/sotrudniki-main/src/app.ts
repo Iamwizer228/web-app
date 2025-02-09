@@ -1,85 +1,81 @@
-import express, { Request, Response } from "express";
-import path from "path";
-import mongoose from "mongoose";
-import fs from "fs";
-import { Parser } from "./libs/pptr";
-import { parseAvitoPage } from "./parsers/avito";
-import { config } from "dotenv";
-import xlsx from "xlsx";
-import Employee from "./models/Employee";
+import express, { Request, Response } from 'express'
+import path from 'path'
+import mongoose from 'mongoose'
+import { Parser } from './libs/pptr'
+import { parseAvitoPage } from './parsers/avito'
+import { config } from 'dotenv'
+import xlsx from 'xlsx'
+import Employee from './models/Employee'
+import fs from 'fs'
+config()
 
-config();
+const app = express()
 
-const app = express();
-
-const { PORT, MONGO_URL } = process.env;
+const { PORT, MONGO_URL } = process.env
 
 if (!PORT || !MONGO_URL) throw new Error('PORT or MONGO_URL is not defined')
 
-mongoose.connect(MONGO_URL);
 
-app.use(express.static(path.join(__dirname, "../client")));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+mongoose.connect(MONGO_URL)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err))
 
-app.get("/export", async (req, res) => {
-  const employees = await Employee.find();
+app.use(express.static(path.join(__dirname, '../client')))
+app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
 
-  const formattedData = [
-    ["Title", "Description", "Salary", "Link"],
-    ...employees.map((employee) => [
-      employee.title,
-      employee.desc,
-      employee.salary,
-      employee.href,
-    ]),
-  ];
+app.get('/export', async (req, res) => {
+  try {
+    const employees = await Employee.find()
+    
+    const formattedData = [
+      ['Title', 'Description', 'Salary', 'Link'],
+      ...employees.map(employee => [employee.title, employee.desc, employee.salary, employee.href])
+    ]
 
-  const employeeWorkSheet = xlsx.utils.aoa_to_sheet(formattedData);
-  const employeeWorkBook = xlsx.utils.book_new();
+    const workSheet = xlsx.utils.aoa_to_sheet(formattedData)
+    const workBook = xlsx.utils.book_new()
+    xlsx.utils.book_append_sheet(workBook, workSheet, 'Employees')
 
-  xlsx.utils.book_append_sheet(employeeWorkBook, employeeWorkSheet, "Employees");
+    const filePath = path.join(__dirname, '../Employees.xlsx')
+    xlsx.writeFile(workBook, filePath)
 
-  const filePath = path.join(__dirname, "../data/Employees.xlsx");
-  
-  xlsx.writeFile(employeeWorkBook, filePath);
+    res.download(filePath, 'Employees.xlsx', (err) => {
+      if (err) console.error('Download error:', err)
+      fs.unlinkSync(filePath) 
+    })
+  } catch (err) {
+    console.error('Export error:', err)
+    res.status(500).send('Internal Server Error')
+  }
+})
 
-  res.download(filePath, "Employees.xlsx");
-});
-
-app.get("/", (req: Request, res: Response) => {
-  const indexPath = path.join(__dirname, "../client", "index.html");
-  fs.readFile(
-    indexPath,
-    "utf8",
-    (err: NodeJS.ErrnoException | null, data: string) => {
-      if (err) {
-        res.status(500).send("Ошибка загрузки index.html");
-        return;
-      }
-      res.send(data);
+app.post('/submit', async (req, res) => {
+  try {
+    const { position, city } = req.body
+    if (!position || !city) {
+      return res.status(400).json({ error: 'Missing required fields' })
     }
-  );
-});
 
-app.post("/submit", async (req: Request, res: Response) => {
-  const { position, city, prompt } = req.body
+    const parser = new Parser()
+    await parser.launch()
 
-  const parser = new Parser();
-  await parser.launch();
-  
-  const page = await parser.newPage();
+    const page = await parser.newPage()
+    const employees = await parseAvitoPage(page, position, city) 
+    
+    await Employee.deleteMany({}) 
+    await Employee.insertMany(employees)
 
-  const employees = parseAvitoPage(page, position, city)
+    await parser.close()
 
-  await parser.close();
+    res.json({
+      message: 'Данные успешно собраны',
+      data: employees
+    })
+  } catch (err) {
+    console.error('Submit error:', err)
+    res.status(500).json({ error: 'Internal Server Error' })
+  }
+})
 
-  await Employee.create(employees)
-  
-  res.json({
-    message: "успешно",
-    data: employees,
-  });
-});
-
-app.listen(PORT, () => console.log(`Сервер запущен на http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Сервер запущен на http://localhost:${PORT}`))

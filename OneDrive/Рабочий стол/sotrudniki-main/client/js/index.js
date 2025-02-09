@@ -1,63 +1,41 @@
-import axios from "axios";
+axios.defaults.baseURL = 'http://localhost:5000';
 
-document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('.application-form');
-    const citySelect = document.querySelector('.city');
-    const customCityInput = document.querySelector('.custom-city');
-    const citizenshipSelect = document.querySelector('.citizenship');
-    const customCitizenshipInput = document.querySelector('.custom-citizenship');
+const position = document.querySelector('#position')
+const city = document.querySelector('#city')
+const criminal = document.querySelector('#criminal')
+const prompt = document.querySelector('#prompt')
 
-    citySelect.addEventListener('change', () => toggleInput(customCityInput, citySelect));
-    citizenshipSelect.addEventListener('change', () => toggleInput(customCitizenshipInput, citizenshipSelect));
+const downloadButton = document.querySelector('.download')
+const form = document.querySelector('form')
 
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const formData = {
-            age: +form.querySelector('.age').value,
-            experience: +form.querySelector('.experience').value,
-            criminal: form.querySelector('.criminal').value,
-            position: form.querySelector('.position').value,
-            city: citySelect.value === 'other' ? customCityInput.value : citySelect.value,
-            citizenship: citizenshipSelect.value === 'other' ? customCitizenshipInput.value : citizenshipSelect.value,
-            query: form.querySelector('.query').value
-        };
-        await submitForm(formData);
-    });
-});
+form?.addEventListener('submit', async (event) => {
+  event.preventDefault()
 
-const toggleInput = (input, select) => {
-    input.style.display = select.value === 'other' ? 'block' : 'none';
-    input.required = select.value === 'other';
-};
-
-const submitForm = async (data) => {
-    const progressContainer = document.querySelector('.progress-container');
-    const progressBar = document.querySelector('.progress-bar');
-    const progressText = document.querySelector('.progress-text');
-    const responseMessage = document.querySelector('.response-message');
-
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    
     try {
-        progressContainer.style.display = 'block';
-        const response = await axios.post('http://localhost:5000/submit', data);
-        const totalPages = response.data.totalPages;
-
-        for (let index = 0; index < totalPages; index++) {
-            const progress = ((index + 1) / totalPages) * 100;
-            progressBar.style.width = `${progress}%`;
-            progressText.textContent = `Обработано страниц: ${index + 1} из ${totalPages}`;
-        }
-
-        displayMessage(response.data.message, 'success');
+      const data = {
+        position: position.value,
+        city: city.value,
+        criminal: criminal.value === 'not_matter',
+        prompt: prompt.value
+      }
+  
+      const response = await axios.post('/submit', data)
+      
+      if (response.data.error) {
+        alert('Ошибка: ' + response.data.error)
+      } else {
+        alert('Данные успешно собраны!')
+        console.log(response.data)
+      }
     } catch (error) {
-        console.error('Ошибка:', error);
-        displayMessage(error.response?.data?.error || 'Ошибка при отправке данных.', 'error');
+      console.error('Request failed:', error)
+      alert('Произошла ошибка при выполнении запроса')
     }
-};
-
-const displayMessage = (message, type) => {
-    const responseMessage = document.querySelector('.response-message');
-    responseMessage.textContent = message;
-    responseMessage.style.color = type === 'success' ? 'green' : 'red';
-    responseMessage.style.display = 'block';
-};
-
+  })
+  
+downloadButton.addEventListener('click', () => {
+  window.location.href = '/export'
+})})
