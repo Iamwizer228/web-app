@@ -9,7 +9,6 @@ const validateId = (id: string): boolean => {
   return !isNaN(parsedId) && parsedId > 0;
 };
 
-
 userRouter.get("/", async (req: Request, res: Response): Promise<void> => {
   try {
     const result = await client.query("SELECT * FROM users");
@@ -60,7 +59,6 @@ userRouter.post("/", [
     res.status(500).send("Ошибка сервера");
   }
 });
-
 userRouter.put("/:id", [
   body('name').isString().notEmpty().withMessage('Имя должно быть непустой строкой')
 ], async (req: Request, res: Response): Promise<void> => {
